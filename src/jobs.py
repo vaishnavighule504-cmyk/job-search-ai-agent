@@ -1,11 +1,13 @@
 import os
 import requests
+import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
 
-API_KEY = os.getenv("RAPIDAPI_KEY")
-API_HOST = os.getenv("RAPIDAPI_HOST")
+# Read from Streamlit Secrets first, then .env
+API_KEY = st.secrets.get("RAPIDAPI_KEY", os.getenv("RAPIDAPI_KEY"))
+API_HOST = st.secrets.get("RAPIDAPI_HOST", os.getenv("RAPIDAPI_HOST", "jsearch-mega.p.rapidapi.com"))
 
 
 def search_jobs(query):
@@ -18,16 +20,25 @@ def search_jobs(query):
 
     params = {
         "query": query,
-        "page": "1",
-        "num_pages": "1",
+        "page": 1,
+        "num_pages": 1,
         "country": "india"
     }
 
-    response = requests.get(url, headers=headers, params=params)
+    try:
+        response = requests.get(
+            url,
+            headers=headers,
+            params=params,
+            timeout=20
+        )
 
-    if response.status_code == 200:
-        return response.json()["data"]
+        response.raise_for_status()
 
-    print(response.status_code)
-    print(response.text)
-    return []
+        data = response.json()
+
+        return data.get("data", [])
+
+    except Exception as e:
+        st.error(f"API Error: {e}")
+        return []
