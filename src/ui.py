@@ -1,3 +1,4 @@
+import hashlib
 import streamlit as st
 from src.ai import analyze_job
 
@@ -14,9 +15,9 @@ def display_job_card(job):
     if job.get("job_min_salary") and job.get("job_max_salary"):
         salary = f"{job['job_min_salary']} - {job['job_max_salary']}"
 
-    unique_key = str(abs(hash(
-        f"{title}_{company}_{city}_{apply_link}"
-    )))
+    unique_key = hashlib.md5(
+        f"{title}_{company}_{city}_{apply_link}".encode("utf-8")
+    ).hexdigest()
 
     with st.container(border=True):
 

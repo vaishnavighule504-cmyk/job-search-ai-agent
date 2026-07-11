@@ -14,6 +14,19 @@ if "jobs" not in st.session_state:
 st.title("💼 Job Search AI Agent")
 st.write("Find jobs instantly using AI-powered search.")
 
+# Resume Upload Section in the Sidebar
+st.sidebar.subheader("📄 Upload Resume")
+
+# Render a file uploader that only accepts PDF files
+uploaded_file = st.sidebar.file_uploader(
+    "Upload your resume (PDF only)",
+    type=["pdf"]
+)
+
+# If a file is uploaded, display a success banner with the file name
+if uploaded_file is not None:
+    st.sidebar.success(f"Uploaded: {uploaded_file.name}")
+
 st.divider()
 
 col1, col2 = st.columns(2)
@@ -58,11 +71,13 @@ filtered = []
 for job in st.session_state.jobs:
 
     if employment_filter != "All":
-        if employment_filter not in job.get("job_employment_types", []):
+        types = job.get("job_employment_types") or []
+        if employment_filter not in types:
             continue
 
     if keyword_filter:
-        if keyword_filter.lower() not in job.get("employer_name", "").lower():
+        employer = job.get("employer_name") or ""
+        if keyword_filter.lower() not in employer.lower():
             continue
 
     filtered.append(job)
