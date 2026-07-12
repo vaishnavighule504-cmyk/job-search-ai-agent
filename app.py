@@ -1,6 +1,7 @@
 import streamlit as st
 from src.jobs import search_jobs
 from src.ui import display_job_card
+from src.pdf_reader import extract_text_from_pdf
 
 st.set_page_config(
     page_title="Job Search AI Agent",
@@ -23,9 +24,21 @@ uploaded_file = st.sidebar.file_uploader(
     type=["pdf"]
 )
 
-# If a file is uploaded, display a success banner with the file name
+# If a file is uploaded, display a success banner and show extracted text
 if uploaded_file is not None:
     st.sidebar.success(f"Uploaded: {uploaded_file.name}")
+    
+    # Call the PDF parser to extract text
+    with st.spinner("Extracting text from resume..."):
+        resume_text = extract_text_from_pdf(uploaded_file)
+        st.session_state.resume_text = resume_text
+        
+    # Render an expander to show the extracted text for testing
+    with st.expander("📄 Extracted Resume Text (Testing)"):
+        if resume_text:
+            st.text_area("Resume Plain Text", resume_text, height=300)
+        else:
+            st.warning("No text could be extracted from this PDF.")
 
 st.divider()
 
