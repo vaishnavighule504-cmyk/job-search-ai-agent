@@ -2,7 +2,7 @@ import os
 import requests
 import streamlit as st
 from dotenv import load_dotenv
-print("API Key Loaded:", bool(RAPIDAPI_KEY))
+
 load_dotenv()
 
 # Read from Streamlit Secrets first, then .env
