@@ -78,15 +78,14 @@ def search_jobs(query):
     url = f"https://{API_HOST}/search"
 
     headers = {
-        "x-rapidapi-key": API_KEY,
-        "x-rapidapi-host": API_HOST
+        "X-RapidAPI-Key": API_KEY,
+        "X-RapidAPI-Host": API_HOST
     }
 
     params = {
         "query": query,
         "page": 1,
-        "num_pages": 1,
-        "country": "india"
+        "num_pages": 1
     }
 
     try:
