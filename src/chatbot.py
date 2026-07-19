@@ -50,4 +50,6 @@ Your job is to answer the user's career, job search, resume, or interview questi
         return response.text
         
     except Exception as e:
+        if "ResourceExhausted" in str(e) or "429" in str(e):
+            return "⚠️ **AI Rate Limit Exceeded**: The Gemini API rate limit was reached. Please wait a minute and try again."
         return f"An error occurred while generating the response: {e}"

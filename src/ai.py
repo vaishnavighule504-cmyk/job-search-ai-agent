@@ -14,8 +14,8 @@ model = genai.GenerativeModel("gemini-3.5-flash")
 
 
 def analyze_job(job):
-
-    prompt = f"""
+    try:
+        prompt = f"""
 You are an expert career coach.
 
 Analyze this job.
@@ -49,9 +49,12 @@ Include:
 Keep the response concise.
 """
 
-    response = model.generate_content(prompt)
-
-    return response.text
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        if "ResourceExhausted" in str(e) or "429" in str(e):
+            return "⚠️ **AI Rate Limit Exceeded**: The Gemini API rate limit was reached. Please wait a minute and try again."
+        return f"⚠️ **AI Analysis Error**: Could not complete analysis due to an error: {e}"
 
 
 def analyze_resume_match(resume_text, job):
@@ -64,7 +67,8 @@ def analyze_resume_match(resume_text, job):
     Returns:
         str: A structured analysis in markdown format.
     """
-    prompt = f"""
+    try:
+        prompt = f"""
 You are an expert ATS (Applicant Tracking System) optimizer and professional career coach.
 
 Analyze the matching compatibility between the candidate's resume and the job description provided below.
@@ -102,5 +106,47 @@ Create a brief, sequential learning roadmap (with specific technologies or conce
 Provide 3-5 tailored technical or situational interview questions that the candidate is likely to face for this specific role, along with brief tips on how they should structure their answers.
 """
 
-    response = model.generate_content(prompt)
-    return response.text
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        if "ResourceExhausted" in str(e) or "429" in str(e):
+            return """
+## 1. Match Score
+Score: 0/100
+AI Rate Limit Exceeded. The Gemini API free tier rate limit was reached. Please wait a minute and try again.
+
+## 2. Matching Skills
+- Rate Limit Exceeded (429)
+
+## 3. Missing Skills
+- Rate Limit Exceeded (429)
+
+## 4. Resume Improvements
+AI Rate Limit Exceeded. Please try again in a minute.
+
+## 5. Learning Roadmap
+AI Rate Limit Exceeded. Please try again in a minute.
+
+## 6. Interview Questions
+- AI Rate Limit Exceeded. Please try again in a minute.
+"""
+        return f"""
+## 1. Match Score
+Score: 0/100
+An error occurred: {e}
+
+## 2. Matching Skills
+- Error occurred
+
+## 3. Missing Skills
+- Error occurred
+
+## 4. Resume Improvements
+An error occurred: {e}
+
+## 5. Learning Roadmap
+An error occurred: {e}
+
+## 6. Interview Questions
+- An error occurred: {e}
+"""
