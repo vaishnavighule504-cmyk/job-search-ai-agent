@@ -2,6 +2,10 @@ import streamlit as st
 from src.jobs import search_jobs
 from src.ui import display_job_card
 from src.pdf_reader import extract_text_from_pdf
+from src.rag import initialize_rag
+
+# Initialize RAG vector store and load career guide documents on startup
+initialize_rag()
 
 st.set_page_config(
     page_title="Job Search AI Agent",
@@ -28,17 +32,93 @@ uploaded_file = st.sidebar.file_uploader(
 if uploaded_file is not None:
     st.sidebar.success(f"Uploaded: {uploaded_file.name}")
     
-    # Call the PDF parser to extract text
-    with st.spinner("Extracting text from resume..."):
-        resume_text = extract_text_from_pdf(uploaded_file)
-        st.session_state.resume_text = resume_text
+    # Call the PDF parser and RAG indexer, caching the result in session state
+    if "last_uploaded_file" not in st.session_state or st.session_state.last_uploaded_file != uploaded_file.name:
+        with st.spinner("Processing resume and indexing for RAG..."):
+            from src.rag import process_uploaded_resume
+            resume_text = process_uploaded_resume(uploaded_file)
+            st.session_state.resume_text = resume_text
+            st.session_state.last_uploaded_file = uploaded_file.name
+    else:
+        resume_text = st.session_state.resume_text
         
     # Render an expander to show the extracted text for testing
     with st.expander("📄 Extracted Resume Text (Testing)"):
-        if resume_text:
+        if resume_text and not resume_text.startswith("Error"):
             st.text_area("Resume Plain Text", resume_text, height=300)
         else:
             st.warning("No text could be extracted from this PDF.")
+
+# AI Career Assistant Sidebar Section
+st.sidebar.divider()
+st.sidebar.subheader("🤖 AI Career Assistant")
+
+# Check status warnings
+import glob
+import os
+pdf_files = glob.glob(os.path.join("documents", "*.pdf"))
+has_pdfs = len(pdf_files) > 0
+has_resume = "resume_text" in st.session_state and st.session_state.resume_text is not None
+
+if not has_pdfs:
+    st.sidebar.warning("⚠️ No knowledge documents found.")
+if not has_resume:
+    st.sidebar.warning("⚠️ Upload your resume first.")
+
+# User question text input using Streamlit's key session state bindings
+if "chat_input" not in st.session_state:
+    st.session_state.chat_input = ""
+
+# Callback to update chat input from selectbox safely before text_input is instantiated
+def on_suggested_select():
+    sug = st.session_state.suggested_selectbox
+    if sug != "-- Choose a suggested question --":
+        st.session_state.chat_input = sug
+        st.session_state.suggested_selectbox = "-- Choose a suggested question --"
+
+user_question = st.sidebar.text_input(
+    "Ask anything about Resume, Jobs, Interview, Career, Learning:",
+    key="chat_input"
+)
+
+# Suggested question templates
+suggested_questions = [
+    "Should I apply for this job?",
+    "Improve my resume.",
+    "Which skills am I missing?",
+    "Prepare interview questions.",
+    "Learning roadmap.",
+    "Career advice."
+]
+
+selected_sug = st.sidebar.selectbox(
+    "💡 Suggested Questions",
+    ["-- Choose a suggested question --"] + suggested_questions,
+    key="suggested_selectbox",
+    on_change=on_suggested_select
+)
+
+ask_button = st.sidebar.button("🤖 Ask AI", use_container_width=True, type="primary")
+
+if ask_button:
+    if not has_resume:
+        st.sidebar.error("Upload your resume first.")
+    elif not has_pdfs:
+        st.sidebar.error("No knowledge documents found.")
+    elif not user_question.strip():
+        st.sidebar.warning("Please enter a question.")
+    else:
+        with st.sidebar.spinner("Generating response..."):
+            from src.chatbot import career_chat
+            response = career_chat(user_question)
+            st.session_state.chat_response = response
+            st.session_state.last_question = user_question
+
+# Display chatbot responses below the button in the sidebar
+if "chat_response" in st.session_state:
+    with st.sidebar.container(border=True):
+        st.markdown(f"**Q:** {st.session_state.last_question}")
+        st.markdown(st.session_state.chat_response)
 
 st.divider()
 

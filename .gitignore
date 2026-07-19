@@ -21,3 +21,9 @@ __pycache__/
 
 # Logs
 *.log
+
+# ChromaDB Cache
+chroma_db/
+
+# Resume Uploads
+uploads/
