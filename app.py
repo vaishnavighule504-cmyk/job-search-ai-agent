@@ -1,7 +1,6 @@
 import streamlit as st
 from src.jobs import search_jobs
 from src.ui import display_job_card
-from src.pdf_reader import extract_text_from_pdf
 from src.rag import initialize_rag
 
 # Initialize RAG vector store and load career guide documents on startup
