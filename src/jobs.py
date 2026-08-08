@@ -21,7 +21,9 @@ MOCK_JOBS = [
         "job_apply_link": "https://careers.google.com",
         "job_min_salary": 1800000,
         "job_max_salary": 3500000,
-        "job_description": "We are seeking a Software Engineer to design, develop, and deploy large-scale software solutions. You will work on cutting-edge systems, collaborate with cross-functional teams, and solve complex algorithms."
+        "job_description": "We are seeking a Software Engineer to design, develop, and deploy large-scale software solutions. You will work on cutting-edge systems, collaborate with cross-functional teams, and solve complex algorithms.",
+        "job_is_remote": False,
+        "job_required_experience_in_months": 24
     },
     {
         "job_id": "mock_2",
@@ -33,7 +35,9 @@ MOCK_JOBS = [
         "job_apply_link": "https://amazon.jobs",
         "job_min_salary": 1200000,
         "job_max_salary": 2400000,
-        "job_description": "Looking for a Python Developer to join our Amazon Web Services (AWS) team in Sangli. Responsibilities include building scalable web services, working with cloud infrastructure, and writing clean, maintainable backend code."
+        "job_description": "Looking for a Python Developer to join our Amazon Web Services (AWS) team in Sangli. Responsibilities include building scalable web services, working with cloud infrastructure, and writing clean, maintainable backend code.",
+        "job_is_remote": False,
+        "job_required_experience_in_months": 12
     },
     {
         "job_id": "mock_3",
@@ -45,7 +49,9 @@ MOCK_JOBS = [
         "job_apply_link": "https://tcs.com/careers",
         "job_min_salary": 15000,
         "job_max_salary": 25000,
-        "job_description": "Join our data analytics division as an intern. You will perform data cleaning, build visualization dashboards using Tableau/PowerBI, and write SQL/Python queries to extract business insights."
+        "job_description": "Join our data analytics division as an intern. You will perform data cleaning, build visualization dashboards using Tableau/PowerBI, and write SQL/Python queries to extract business insights.",
+        "job_is_remote": False,
+        "job_required_experience_in_months": 0
     },
     {
         "job_id": "mock_4",
@@ -57,7 +63,9 @@ MOCK_JOBS = [
         "job_apply_link": "https://infosys.com/careers",
         "job_min_salary": 800000,
         "job_max_salary": 1400000,
-        "job_description": "We need a contract-based Frontend Developer proficient in React, Redux, and Tailwind CSS. You will build modern user interfaces, optimize web performance, and integrate REST APIs."
+        "job_description": "We need a contract-based Frontend Developer proficient in React, Redux, and Tailwind CSS. You will build modern user interfaces, optimize web performance, and integrate REST APIs.",
+        "job_is_remote": False,
+        "job_required_experience_in_months": 36
     },
     {
         "job_id": "mock_5",
@@ -69,7 +77,9 @@ MOCK_JOBS = [
         "job_apply_link": "https://openai.com/careers",
         "job_min_salary": 2500000,
         "job_max_salary": 5000000,
-        "job_description": "Work on the frontier of artificial intelligence. Design and train large-scale neural networks, optimize training runs, and collaborate with leading scientists to shape the future of technology."
+        "job_description": "Work on the frontier of artificial intelligence. Design and train large-scale neural networks, optimize training runs, and collaborate with leading scientists to shape the future of technology.",
+        "job_is_remote": True,
+        "job_required_experience_in_months": 48
     }
 ]
 

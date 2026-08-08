@@ -26,4 +26,9 @@ __pycache__/
 chroma_db/
 
 # Resume Uploads
-uploads/
+uploads/
+
+# SQLite Database
+*.db
+scratch/
+test_env/

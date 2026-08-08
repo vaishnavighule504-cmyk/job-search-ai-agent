@@ -16,7 +16,7 @@ def career_chat(user_question):
         context = retrieve_context(user_question, n_results=5)
         
         # Get raw resume text from session state if available
-        resume_text = st.session_state.get("resume_text", "Not uploaded")
+        resume_text = st.session_state.get("resume_text") or "Not uploaded"
         
         # Configure API key
         api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
