@@ -607,9 +607,9 @@ elif st.session_state.current_page == "Jobs":
 
     st.write("")
 
-    if st.button("ðŸ” Search Jobs", use_container_width=True, type="primary"):
+    if st.button(" Search Jobs", use_container_width=True, type="primary"):
         if not job_title.strip() and not location.strip():
-            st.error("âš ï¸ Please enter a job title/keyword or a location to search.")
+            st.error("Please enter a job title/keyword or a location to search.")
         else:
             query = job_title.strip() if job_title.strip() else "Developer"
             if location.strip():
