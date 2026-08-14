@@ -15,18 +15,7 @@ if API_KEY:
 
 # ----------------- Text Extraction & Chunking -----------------
 
-def extract_text_from_pdf(pdf_file):
-    """Extracts all text from a PDF file stream using PyPDF2."""
-    text = ""
-    try:
-        reader = PyPDF2.PdfReader(pdf_file)
-        for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-    except Exception as e:
-        return f"Error reading PDF: {e}"
-    return text.strip()
+from src.pdf_reader import extract_text_from_pdf
 
 def chunk_text(text, chunk_size=1000, chunk_overlap=200):
     """Splits text into chunks of roughly chunk_size characters, respecting word boundaries."""
@@ -77,9 +66,9 @@ def get_embeddings(texts, is_query=False):
         return embeddings[0] if is_single and embeddings else embeddings
     except Exception as e:
         try:
-            # Fallback to gemini-embedding-2
+            # Fallback to text-embedding-004
             response = genai.embed_content(
-                model="models/gemini-embedding-2",
+                model="models/text-embedding-004",
                 content=texts,
                 task_type=task_type
             )
@@ -276,13 +265,13 @@ def initialize_rag():
                         embeddings = get_embeddings(chunks)
                     except Exception as e:
                         # Friendly message instead of crashing
-                        st.sidebar.warning(f"⚠️ Embeddings failed for {os.path.basename(file_path)}. Using text search.")
+                        st.warning(f"⚠️ Embeddings failed for {os.path.basename(file_path)}. Using text search.")
                         
                     st.session_state.vector_store.add_documents(chunks, embeddings, metadatas)
                     st.session_state.processed_documents.add(file_path)
         except Exception as e:
             # Never crash
-            st.sidebar.error(f"Error loading {os.path.basename(file_path)}: {e}")
+            st.error(f"Error loading {os.path.basename(file_path)}: {e}")
 
 def process_uploaded_resume(uploaded_file):
     """Saves resume to uploads/, extracts text, chunks it, embeds, and adds to store."""
@@ -302,7 +291,7 @@ def process_uploaded_resume(uploaded_file):
             text = extract_text_from_pdf(f)
             
         if not text or text.startswith("Error"):
-            return "Error extracting text from resume PDF"
+            return text if text else "Error extracting text from resume PDF"
             
         chunks = chunk_text(text)
         if not chunks:
@@ -313,7 +302,7 @@ def process_uploaded_resume(uploaded_file):
         try:
             embeddings = get_embeddings(chunks)
         except Exception as e:
-            st.sidebar.warning(f"⚠️ Embeddings failed for resume. Using text search.")
+            st.warning(f"⚠️ Embeddings failed for resume. Using text search.")
             
         if "vector_store" not in st.session_state:
             st.session_state.vector_store = RAGVectorStore()
@@ -354,9 +343,13 @@ def retrieve_context(user_question, n_results=5):
         
     formatted_context = []
     documents = results["documents"][0]
-    metadatas = results.get("metadatas", [[]])[0]
+    
+    # Safely get metadatas list
+    raw_metadatas = results.get("metadatas")
+    metadatas = raw_metadatas[0] if (raw_metadatas and len(raw_metadatas) > 0 and raw_metadatas[0] is not None) else [None] * len(documents)
     
     for doc, meta in zip(documents, metadatas):
+        meta = meta if meta is not None else {}
         src_file = meta.get("source_file", "unknown")
         src_type = meta.get("source_type", "unknown")
         formatted_context.append(f"[{src_type.upper()} from {src_file}]:\n{doc}")
