@@ -5,15 +5,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Read from Streamlit Secrets first, then fallback to environment variables
-api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
-if api_key:
-    genai.configure(api_key=api_key)
-
-model = genai.GenerativeModel("gemini-3.5-flash")
+# Google Generative AI is configured dynamically in each function
 
 
 def analyze_job(job):
+    api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
+    if not api_key:
+        return "⚠️ **AI Configuration Error**: The Gemini API key is not configured. Please set GEMINI_API_KEY in your secrets or environment variables."
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-3.5-flash")
     try:
         prompt = f"""
 You are an expert career coach.
@@ -67,6 +67,30 @@ def analyze_resume_match(resume_text, job):
     Returns:
         str: A structured analysis in markdown format.
     """
+    api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
+    if not api_key:
+        return """
+## 1. Match Score
+Score: 0/100
+Gemini API key is not configured. Please set GEMINI_API_KEY in secrets or environment variables.
+
+## 2. Matching Skills
+- API Key Missing
+
+## 3. Missing Skills
+- API Key Missing
+
+## 4. Resume Improvements
+Gemini API key is not configured. Please set GEMINI_API_KEY in secrets or environment variables.
+
+## 5. Learning Roadmap
+Gemini API key is not configured. Please set GEMINI_API_KEY in secrets or environment variables.
+
+## 6. Interview Questions
+- Gemini API key is not configured. Please set GEMINI_API_KEY in secrets or environment variables.
+"""
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-3.5-flash")
     try:
         prompt = f"""
 You are an expert ATS (Applicant Tracking System) optimizer and professional career coach.
@@ -149,4 +173,49 @@ An error occurred: {e}
 
 ## 6. Interview Questions
 - An error occurred: {e}
-"""
+"""
+
+
+def analyze_resume_general(resume_text):
+    """Generates a comprehensive analysis of the candidate's resume, including:
+       Summary, Key Skills, Strengths, Weak/Missing Areas, and Suggestions.
+    """
+    api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
+    if not api_key:
+        return "⚠️ **AI Configuration Error**: The Gemini API key is not configured. Please set GEMINI_API_KEY in secrets or environment variables."
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-3.5-flash")
+    try:
+        prompt = f"""
+You are a senior professional recruiter and executive career coach.
+Analyze the candidate's resume text below and provide a structured, detailed evaluation.
+
+### Candidate's Resume
+{resume_text}
+
+---
+
+Provide your analysis in clean, professional Markdown. You MUST structure the response with the following exact heading sections:
+
+## 1. Resume Summary
+Provide a professional 3-4 sentence summary of the candidate's profile, highlights, and experience level.
+
+## 2. Key Skills & Technologies
+List the primary technical and soft skills identified in the resume. Group them logically if appropriate.
+
+## 3. Top Strengths
+List 3-4 key professional strengths or standout achievements demonstrated in the resume.
+
+## 4. Areas for Improvement (Weaknesses/Missing Elements)
+List areas where the resume is weak (e.g. missing metrics, vague bullet points, formatting gaps, lack of certifications, or key industry skills).
+
+## 5. Actionable Suggestions
+Provide specific, drop-in phrasing or content suggestions to improve the resume's impact and ATS compatibility.
+"""
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        if "ResourceExhausted" in str(e) or "429" in str(e):
+            return "⚠️ **AI Rate Limit Exceeded**: Gemini rate limit was reached. Please wait a minute and try again."
+        return f"⚠️ **AI Resume Analysis Error**: Could not complete analysis: {e}"
+

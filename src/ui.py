@@ -1,40 +1,7 @@
 import hashlib
 import streamlit as st
-import sqlite3
 from src.ai import analyze_job
-from src.utils import format_salary
 
-def save_job(job):
-    conn = sqlite3.connect("jobs.db")
-    cursor = conn.cursor()
-
-    salary = format_salary(job)
-
-    try:
-        cursor.execute(
-            """
-            INSERT INTO saved_jobs
-            (job_title, company, location, employment, salary, apply_link)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                job.get("job_title"),
-                job.get("employer_name"),
-                job.get("job_city"),
-                job.get("job_employment_type"),
-                salary,
-                job.get("job_apply_link"),
-            ),
-        )
-
-        conn.commit()
-        st.success("✅ Job saved successfully!")
-
-    except sqlite3.IntegrityError:
-        st.warning("⚠️ This job is already saved.")
-
-    finally:
-        conn.close()
 
 def display_job_card(job):
     title = job.get("job_title", "N/A")
@@ -42,12 +9,11 @@ def display_job_card(job):
     city = job.get("job_city") or "Not specified"
     employment = job.get("job_employment_type", "N/A")
     apply_link = job.get("job_apply_link")
-    salary = format_salary(job)
 
-    # -------- NEW --------
-    benefits = job.get("job_benefits_strings", [])
-    is_remote = job.get("job_is_remote", False)
-    # ---------------------
+    salary = "Not disclosed"
+
+    if job.get("job_min_salary") and job.get("job_max_salary"):
+        salary = f"{job['job_min_salary']} - {job['job_max_salary']}"
 
     unique_key = hashlib.md5(
         f"{title}_{company}_{city}_{apply_link}".encode("utf-8")
@@ -55,101 +21,63 @@ def display_job_card(job):
 
     with st.container(border=True):
 
-        col1, col2, col3 = st.columns([5, 1, 1])
+        col1, col2 = st.columns([3, 1])
 
         with col1:
-
-            st.subheader(title)
-
-            st.write(f"🏢 **Company:** {company}")
-            st.write(f"📍 **Location:** {city}")
-            st.write(f"💼 **Employment:** {employment}")
-            st.write(f"💰 **Salary:** {salary}")
-
-            # ---------- NEW ----------
-            if is_remote:
-                st.success("🌍 Remote Job")
-            else:
-                st.info("🏢 On-site / Hybrid")
-
-            if benefits:
-                st.markdown("### 🎁 Benefits")
-
-                cols = st.columns(2)
-
-                for i, benefit in enumerate(benefits):
-                    cols[i % 2].write(f"✅ {benefit}")
-
-            else:
-                st.caption("No benefits listed.")
-            # -------------------------
+            st.markdown(f"<h3 style='color: #000000; margin: 0 0 8px 0; font-size: 22px; font-weight: 700; font-family: Outfit, sans-serif;'>{title}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size: 14px; color: #000000; font-weight: 600; font-family: Outfit, sans-serif;'>🏢 {company} &nbsp;•&nbsp; 📍 {city}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size: 13px; color: #000000; margin-top: 4px; font-weight: 500; font-family: Outfit, sans-serif;'>💼 {employment} &nbsp;•&nbsp; 💰 {salary}</div>", unsafe_allow_html=True)
+            
+            # Show remote friendly badge if applicable
+            is_remote = job.get("job_is_remote")
+            if is_remote or "remote" in city.lower():
+                st.markdown(
+                    "<span style='background-color: #DFD3C3; color: #000000; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-top: 8px; font-family: Outfit, sans-serif;'>🌐 Remote / WFH Friendly</span>",
+                    unsafe_allow_html=True
+                )
 
         with col2:
             if apply_link:
-                st.link_button(
-                    "Apply",
-                    apply_link,
-                    use_container_width=True,
-                )
+                st.link_button("Apply ↗", apply_link, use_container_width=True)
+            
+            # Save/Track Job Button
+            from src.database import save_job, get_all_applications
+            job_id = job.get("job_id") or unique_key
+            saved_jobs = {app["job_id"] for app in get_all_applications()}
+            is_saved = job_id in saved_jobs
+            
+            if is_saved:
+                st.button("Saved ✓", key=f"save_{unique_key}", disabled=True, use_container_width=True)
+            else:
+                if st.button("Save Job 📁", key=f"save_{unique_key}", use_container_width=True):
+                    if save_job(job_id, title, company, city, apply_link, status="Saved"):
+                        st.toast("Job saved to Tracker!")
+                        st.rerun()
 
-        with col3:
-            if st.button(
-                "💾 Save",
-                key=f"save_{unique_key}",
-                use_container_width=True,
-            ):
-                save_job(job)
+        # Action buttons row
+        has_valid_resume = "resume_text" in st.session_state and st.session_state.resume_text and not st.session_state.resume_text.startswith("Error")
+        col_b1, col_b2 = st.columns(2) if has_valid_resume else (st.columns(1) + [None])
 
-        if st.session_state.get("resume_text"):
-
-            ai1, ai2 = st.columns(2)
-
-            with ai1:
-
-                if st.button(
-                    "✨ Analyze with AI",
-                    key=f"ai_{unique_key}",
-                    use_container_width=True,
-                ):
-                    with st.spinner("Analyzing..."):
-                        analysis = analyze_job(job)
-
-                    st.markdown(analysis)
-
-            with ai2:
-
-                if st.button(
-                    "📊 Analyze Resume Fit",
-                    key=f"fit_{unique_key}",
-                    use_container_width=True,
-                ):
-                    from src.ai import analyze_resume_match
-
-                    with st.spinner("Matching Resume..."):
-                        fit = analyze_resume_match(
-                            st.session_state.resume_text,
-                            job,
-                        )
-
-                    display_resume_analysis(fit)
-
-        else:
-
-            if st.button(
-                "✨ Analyze with AI",
-                key=f"ai_{unique_key}",
-                use_container_width=True,
-            ):
-                with st.spinner("Analyzing..."):
+        with col_b1:
+            if st.button("✨ Analyze with AI", key=f"ai_{unique_key}", use_container_width=True):
+                with st.spinner("Analyzing with Gemini..."):
                     analysis = analyze_job(job)
-
                 st.markdown(analysis)
+
+        if col_b2 is not None:
+            with col_b2:
+                if st.button("📊 Analyze Resume Fit", key=f"fit_{unique_key}", use_container_width=True):
+                    from src.ai import analyze_resume_match
+                    with st.spinner("Matching resume with Gemini..."):
+                        fit_analysis = analyze_resume_match(st.session_state.resume_text, job)
+                    display_resume_analysis(fit_analysis)
 
         description = job.get("job_description")
 
         if description:
-            with st.expander("📄 Job Description"):
+            with st.expander("📄 Full Job Description"):
                 st.write(description)
+
 
 def display_resume_analysis(analysis_text):
     """Parses and renders the Gemini resume-to-job analysis output with a premium Streamlit UI."""
@@ -190,8 +118,8 @@ def display_resume_analysis(analysis_text):
         sections[key] = content
 
     st.write("")
-    st.markdown("---")
-    st.subheader("📊 Resume Match Analysis")
+    st.markdown("<hr style='border-top: 1px solid #D0B8A8;'>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #000000; font-family: Outfit, sans-serif; font-weight: 700; font-size: 24px; margin-bottom: 16px;'>📊 Resume Match Analysis</h3>", unsafe_allow_html=True)
 
     # Render Match Score Section
     if sections["score"]:
@@ -203,15 +131,22 @@ def display_resume_analysis(analysis_text):
 
         col_metric, col_prog = st.columns([1, 2])
         with col_metric:
-            st.metric(
-                label="Match Score",
-                value=f"{score_value}/100",
-                delta=f"{score_value - 50}% vs passing score" if score_value >= 50 else f"{score_value - 50}% vs passing score",
-                delta_color="normal" if score_value >= 60 else "inverse"
-            )
+            st.markdown(f"""
+            <div style='background-color: #F8EDE3; border: 1px solid #D0B8A8; border-radius: 8px; padding: 12px; text-align: center; font-family: Outfit, sans-serif;'>
+                <div style='font-size: 11px; font-weight: 700; color: #000000; text-transform: uppercase;'>Match Score</div>
+                <div style='font-size: 28px; font-weight: 800; color: #000000; margin-top: 2px;'>{score_value}/100</div>
+            </div>
+            """, unsafe_allow_html=True)
         with col_prog:
-            st.write("")  # Spacer to vertically center the progress bar
-            st.progress(score_value / 100.0)
+            st.write("")  # Spacer
+            st.markdown(f"""
+            <div style='margin-bottom: 6px; font-size: 13px; font-weight: 700; color: #000000; font-family: Outfit, sans-serif;'>
+                <span>Resume Matching Progress</span>
+            </div>
+            <div style='background-color: #DFD3C3; height: 8px; border-radius: 4px; overflow: hidden;'>
+                <div style='background-color: #8D493A; width: {score_value}%; height: 100%;'></div>
+            </div>
+            """, unsafe_allow_html=True)
 
         # Display score explanation
         explanation = re.sub(r"Score:\s*\d+/\d+", "", sections["score"], flags=re.IGNORECASE).strip()
@@ -223,11 +158,11 @@ def display_resume_analysis(analysis_text):
     col_skills_1, col_skills_2 = st.columns(2)
     with col_skills_1:
         with st.container(border=True):
-            st.markdown("#### 🟢 Matching Skills")
+            st.markdown("<h4 style='color: #000000; font-family: Outfit, sans-serif; font-weight: 700; margin-top: 0;'>✦ Matching Skills</h4>", unsafe_allow_html=True)
             st.markdown(sections["matching_skills"] if sections["matching_skills"] else "No matching skills identified.")
     with col_skills_2:
         with st.container(border=True):
-            st.markdown("#### 🔴 Missing Skills")
+            st.markdown("<h4 style='color: #000000; font-family: Outfit, sans-serif; font-weight: 700; margin-top: 0;'>✦ Missing Skills</h4>", unsafe_allow_html=True)
             st.markdown(sections["missing_skills"] if sections["missing_skills"] else "No missing skills identified.")
 
     st.write("")
