@@ -17,7 +17,7 @@ except Exception as e:
 
 st.set_page_config(
     page_title="Careerly AI / Job Search AI Agent",
-    page_icon="ðŸ’¼",
+    page_icon="💼",
     layout="wide"
 )
 
@@ -115,7 +115,7 @@ st.markdown("""
         background-color: #DFD3C3 !important;
         color: #000000 !important;
     }
-    div[data-testid="stHorizontalBlock"]:first-of-type button[kind="primary"] {
+    div[data-testid="stHorizontalBlock"]:first-of-type button[data-testid="stBaseButton-primary"] {
         background-color: #DFD3C3 !important;
         color: #000000 !important;
         font-weight: 700 !important;
@@ -123,7 +123,7 @@ st.markdown("""
     }
 
     /* Primary buttons (Earthy sand background, black text) */
-    button[kind="primary"] {
+    button[data-testid="stBaseButton-primary"] {
         background-color: #D0B8A8 !important;
         color: #000000 !important;
         border: 1px solid #8D493A !important;
@@ -135,7 +135,7 @@ st.markdown("""
         transition: all 0.15s ease-in-out !important;
         font-family: 'Outfit', sans-serif !important;
     }
-    button[kind="primary"]:hover {
+    button[data-testid="stBaseButton-primary"]:hover {
         background-color: #DFD3C3 !important;
         border-color: #8D493A !important;
         color: #000000 !important;
@@ -143,7 +143,7 @@ st.markdown("""
     }
 
     /* Secondary buttons (White/beige, black text) */
-    button[kind="secondary"] {
+    button[data-testid="stBaseButton-secondary"] {
         background-color: #FFFFFF !important;
         color: #000000 !important;
         border: 1px solid #D0B8A8 !important;
@@ -155,7 +155,7 @@ st.markdown("""
         transition: all 0.15s ease-in-out !important;
         font-family: 'Outfit', sans-serif !important;
     }
-    button[kind="secondary"]:hover {
+    button[data-testid="stBaseButton-secondary"]:hover {
         background-color: #F8EDE3 !important;
         border-color: #8D493A !important;
         color: #000000 !important;
@@ -315,7 +315,7 @@ nav_col_logo, nav_col_menu, nav_col_profile = st.columns([1.5, 4.5, 1])
 with nav_col_logo:
     st.markdown(
         "<div style='display: flex; align-items: center; height: 50px;'>"
-        "<span style='font-size: 20px; font-weight: 700; color: #8D493A; letter-spacing: -0.5px;'>ðŸ’¼ Careerly AI</span>"
+        "<span style='font-size: 20px; font-weight: 700; color: #8D493A; letter-spacing: -0.5px;'>💼 Careerly AI</span>"
         "</div>",
         unsafe_allow_html=True
     )
@@ -334,7 +334,7 @@ with nav_col_menu:
 with nav_col_profile:
     st.markdown(
         "<div style='text-align: right; line-height: 50px; font-size: 14px; font-weight: 500; color: #6D4C41;'>"
-        "ðŸ‘¤ Profile"
+        "👤 Profile"
         "</div>",
         unsafe_allow_html=True
     )
@@ -375,7 +375,7 @@ if st.session_state.current_page == "Home":
         )
         st.markdown(
             "<p style='font-size: 18px; line-height: 1.5; color: #6D4C41; margin-bottom: 30px;'>"
-            "Discover relevant opportunities, improve your resume, and get personalized career guidance â€” all in one place."
+            "Discover relevant opportunities, improve your resume, and get personalized career guidance — all in one place."
             "</p>",
             unsafe_allow_html=True
         )
@@ -400,7 +400,7 @@ if st.session_state.current_page == "Home":
 <span style="background-color: #DFD3C3; color: #8D493A; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;">85/100 Score</span>
 </div>
 <h4 style="margin: 0 0 4px 0; color: #8D493A; font-size: 18px; font-weight: 700; letter-spacing: -0.3px;">Senior Software Engineer</h4>
-<p style="margin: 0 0 20px 0; color: #6D4C41; font-size: 13px;">Google LLC â€¢ Bangalore</p>
+<p style="margin: 0 0 20px 0; color: #6D4C41; font-size: 13px;">Google LLC • Bangalore</p>
 <div style="margin-bottom: 20px;">
 <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: #3E2723;">
 <span>Resume Keyword Matching</span>
@@ -470,7 +470,7 @@ if st.session_state.current_page == "Home":
 
     with col_q1:
         with st.container(border=True):
-            st.markdown("<h4 style='font-size: 18px; font-weight: 600; color: #8D493A; margin-bottom: 8px;'>01 â€” Find Opportunities</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='font-size: 18px; font-weight: 600; color: #8D493A; margin-bottom: 8px;'>01 — Find Opportunities</h4>", unsafe_allow_html=True)
             st.markdown("<p style='font-size: 14px; color: #6D4C41; line-height: 1.4;'>Search jobs based on role, location and filters.</p>", unsafe_allow_html=True)
             if st.button("Explore Opportunities", key="q_explore", use_container_width=True):
                 st.session_state.current_page = "Jobs"
@@ -478,7 +478,7 @@ if st.session_state.current_page == "Home":
 
     with col_q2:
         with st.container(border=True):
-            st.markdown("<h4 style='font-size: 18px; font-weight: 600; color: #8D493A; margin-bottom: 8px;'>02 â€” Improve Your Resume</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='font-size: 18px; font-weight: 600; color: #8D493A; margin-bottom: 8px;'>02 — Improve Your Resume</h4>", unsafe_allow_html=True)
             st.markdown("<p style='font-size: 14px; color: #6D4C41; line-height: 1.4;'>Upload and analyze your resume using AI.</p>", unsafe_allow_html=True)
             if st.button("Optimize Resume", key="q_resume", use_container_width=True):
                 st.session_state.current_page = "Resume"
@@ -486,7 +486,7 @@ if st.session_state.current_page == "Home":
 
     with col_q3:
         with st.container(border=True):
-            st.markdown("<h4 style='font-size: 18px; font-weight: 600; color: #8D493A; margin-bottom: 8px;'>03 â€” Ask Careerly</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='font-size: 18px; font-weight: 600; color: #8D493A; margin-bottom: 8px;'>03 — Ask Careerly</h4>", unsafe_allow_html=True)
             st.markdown("<p style='font-size: 14px; color: #6D4C41; line-height: 1.4;'>Get AI guidance about jobs, skills, and planning.</p>", unsafe_allow_html=True)
             if st.button("Start Chat", key="q_coach", use_container_width=True):
                 st.session_state.current_page = "AI Career Coach"
@@ -531,17 +531,17 @@ if st.session_state.current_page == "Home":
                     <div style='font-size: 18px; font-weight: 700; color: #8D493A;'>{stats['Saved']}</div>
                     <div style='margin-top: 4px; color: #6D4C41; font-size: 11px;'>Saved</div>
                 </div>
-                <div style='color: #D0B8A8; font-size: 16px;'>âž”</div>
+                <div style='color: #D0B8A8; font-size: 16px;'>➔</div>
                 <div>
                     <div style='font-size: 18px; font-weight: 700; color: #8D493A;'>{stats['Applied']}</div>
                     <div style='margin-top: 4px; color: #6D4C41; font-size: 11px;'>Applied</div>
                 </div>
-                <div style='color: #D0B8A8; font-size: 16px;'>âž”</div>
+                <div style='color: #D0B8A8; font-size: 16px;'>➔</div>
                 <div>
                     <div style='font-size: 18px; font-weight: 700; color: #8D493A;'>{stats['Interview']}</div>
                     <div style='margin-top: 4px; color: #6D4C41; font-size: 11px;'>Interview</div>
                 </div>
-                <div style='color: #D0B8A8; font-size: 16px;'>âž”</div>
+                <div style='color: #D0B8A8; font-size: 16px;'>➔</div>
                 <div>
                     <div style='font-size: 18px; font-weight: 700; color: #8D493A;'>{stats['Offer']}</div>
                     <div style='margin-top: 4px; color: #6D4C41; font-size: 11px;'>Offer</div>
@@ -554,7 +554,7 @@ if st.session_state.current_page == "Home":
 
     # 9. AI CAREER COACH CARD (Dashboard version)
     with st.container(border=True):
-        st.markdown("<h3 style='font-size: 20px; color: #8D493A; margin-top:0;'>ðŸ¤– Meet your AI Career Coach</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-size: 20px; color: #8D493A; margin-top:0;'>🤖 Meet your AI Career Coach</h3>", unsafe_allow_html=True)
         st.markdown("<p style='color: #6D4C41;'>Get personalized guidance based on your resume, target roles and career goals.</p>", unsafe_allow_html=True)
         if st.button("Ask Careerly", key="dash_coach_ask_btn"):
             st.session_state.current_page = "AI Career Coach"
@@ -567,43 +567,43 @@ elif st.session_state.current_page == "Jobs":
 
     col1, col2 = st.columns(2)
     with col1:
-        job_title = st.text_input("ðŸ” Job Title / Keyword", placeholder="e.g. Python Developer", key="search_title")
+        job_title = st.text_input("🔍 Job Title / Keyword", placeholder="e.g. Python Developer", key="search_title")
     with col2:
-        location = st.text_input("ðŸ“ Location", placeholder="e.g. Sangli, Remote", key="search_loc")
+        location = st.text_input("📍 Location", placeholder="e.g. Sangli, Remote", key="search_loc")
 
     # Filters expander
-    with st.expander("âš™ï¸ Advanced Dashboard Filters", expanded=True):
+    with st.expander("⚙️ Advanced Dashboard Filters", expanded=True):
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
         with col_f1:
             employment_filter = st.selectbox(
-                "ðŸ’¼ Employment Type",
+                "💼 Employment Type",
                 ["All", "FULLTIME", "PARTTIME", "CONTRACTOR", "INTERN"],
                 key="filter_employment"
             )
         with col_f2:
             experience_filter = st.selectbox(
-                "ðŸ“ˆ Experience Level",
+                "📈 Experience Level",
                 ["All", "Entry Level (< 2 yrs)", "Mid Level (2-5 yrs)", "Senior Level (> 5 yrs)"],
                 key="filter_experience"
             )
         with col_f3:
             remote_filter = st.selectbox(
-                "ðŸŒ Work Mode",
+                "🌐 Work Mode",
                 ["All", "Remote Only", "On-site / Hybrid"],
                 key="filter_remote"
             )
         with col_f4:
             sort_by = st.selectbox(
-                "ðŸ”€ Sort Results By",
+                "🔀 Sort Results By",
                 ["None", "Title", "Company Name", "Salary (High to Low)"],
                 key="filter_sort"
             )
 
         col_f5, col_f6 = st.columns(2)
         with col_f5:
-            min_salary = st.number_input("ðŸ’° Minimum Annual Salary", min_value=0, value=0, step=100000, key="filter_min_salary")
+            min_salary = st.number_input("💰 Minimum Annual Salary", min_value=0, value=0, step=100000, key="filter_min_salary")
         with col_f6:
-            company_filter = st.text_input("ðŸ¢ Company Name (Optional)", placeholder="e.g. Google", key="filter_company_name")
+            company_filter = st.text_input("🏢 Company Name (Optional)", placeholder="e.g. Google", key="filter_company_name")
 
     st.write("")
 
@@ -683,12 +683,12 @@ elif st.session_state.current_page == "Jobs":
         st.write("")
         col_header, col_export = st.columns([4, 1])
         with col_header:
-            st.subheader(f"ðŸ’¼ Match Results ({len(filtered)})")
+            st.subheader(f"💼 Match Results ({len(filtered)})")
         with col_export:
             pdf_bytes = generate_pdf_report(filtered)
             if pdf_bytes:
                 st.download_button(
-                    label="ðŸ“¥ Export results to PDF",
+                    label="📥 Export results to PDF",
                     data=pdf_bytes,
                     file_name="job_search_results.pdf",
                     mime="application/pdf",
@@ -699,9 +699,9 @@ elif st.session_state.current_page == "Jobs":
             display_job_card(job)
 
     elif st.session_state.jobs:
-        st.warning("âš ï¸ No job listings matched your filters. Adjust them and try again.")
+        st.warning("⚠️ No job listings matched your filters. Adjust them and try again.")
     else:
-        st.info("ðŸ’¡ Fill in the search inputs and click 'Search Jobs' to get started!")
+        st.info("💡 Fill in the search inputs and click 'Search Jobs' to get started!")
 
 # ----------------- 3. RESUME PAGE -----------------
 elif st.session_state.current_page == "Resume":
@@ -718,13 +718,13 @@ elif st.session_state.current_page == "Resume":
     if uploaded_file is not None:
         MAX_FILE_SIZE_MB = 5
         if uploaded_file.size > MAX_FILE_SIZE_MB * 1024 * 1024:
-            st.error("âš ï¸ File size exceeds the 5MB limit. Please upload a smaller PDF resume.")
+            st.error("⚠️ File size exceeds the 5MB limit. Please upload a smaller PDF resume.")
         else:
             if st.session_state.last_uploaded_file != uploaded_file.name:
                 with st.spinner("Processing resume..."):
                     res_text = process_uploaded_resume(uploaded_file)
                     if res_text.startswith("Error"):
-                        st.error(f"âš ï¸ {res_text}")
+                        st.error(f"⚠️ {res_text}")
                         st.session_state.resume_text = None
                         st.session_state.last_uploaded_file = None
                     else:
@@ -732,15 +732,15 @@ elif st.session_state.current_page == "Resume":
                         st.session_state.last_uploaded_file = uploaded_file.name
                         st.success(f"Successfully uploaded: {uploaded_file.name}")
             else:
-                st.success(f"ðŸ“‚ Active Resume: {uploaded_file.name}")
+                st.success(f"📂 Active Resume: {uploaded_file.name}")
 
     st.write("")
 
     if not has_resume:
-        st.info("ðŸ’¡ Upload your resume above to view parser output and run ATS analysis audits.")
+        st.info("💡 Upload your resume above to view parser output and run ATS analysis audits.")
     else:
         # General resume analysis triggers
-        if st.button("ðŸ“Š Run General Resume ATS Audit", use_container_width=True, type="primary"):
+        if st.button("📊 Run General Resume ATS Audit", use_container_width=True, type="primary"):
             with st.spinner("Analyzing resume content against recruitment standards..."):
                 try:
                     res_analysis = analyze_resume_general(st.session_state.resume_text)
@@ -749,10 +749,10 @@ elif st.session_state.current_page == "Resume":
                     st.error(f"Analysis failed: {e}")
 
         if "general_resume_analysis" in st.session_state:
-            st.markdown("### ðŸ“Š ATS and Skills Assessment Report")
+            st.markdown("### 📊 ATS and Skills Assessment Report")
             st.markdown(st.session_state.general_resume_analysis)
 
-        with st.expander("ðŸ“„ View Parsed Resume Plain Text"):
+        with st.expander("📄 View Parsed Resume Plain Text"):
             st.text_area("Extracted Resume Text:", st.session_state.resume_text, height=350)
 
 # ----------------- 4. AI CAREER COACH PAGE -----------------
@@ -761,9 +761,9 @@ elif st.session_state.current_page == "AI Career Coach":
     st.write("Interact with your persistent career assistant. Ask about keywords, learning roadmaps, and interview preparation.")
 
     if not has_resume:
-        st.info("ðŸ’¡ **Tip:** Upload your resume PDF in the **Resume** tab to unlock personalized match analyses.")
+        st.info("💡 **Tip:** Upload your resume PDF in the **Resume** tab to unlock personalized match analyses.")
     if not has_pdfs:
-        st.warning("âš ï¸ RAG Knowledge base is active, but no career guides were found in your documents folder.")
+        st.warning("⚠️ RAG Knowledge base is active, but no career guides were found in your documents folder.")
 
     # Standard chatbot interaction logic mapped on main screen
     user_question = st.text_input(
@@ -780,7 +780,7 @@ elif st.session_state.current_page == "AI Career Coach":
     ]
 
     selected_sug = st.selectbox(
-        "ðŸ’¡ Quick Suggestions",
+        "💡 Quick Suggestions",
         ["-- Choose a suggested question --"] + suggested_questions,
         key="main_suggested_select"
     )
@@ -788,7 +788,7 @@ elif st.session_state.current_page == "AI Career Coach":
     if selected_sug != "-- Choose a suggested question --":
         user_question = selected_sug
 
-    ask_button = st.button("ðŸ¤– Ask Assistant", type="primary")
+    ask_button = st.button("🤖 Ask Assistant", type="primary")
 
     if ask_button:
         if not user_question.strip():
@@ -806,10 +806,10 @@ elif st.session_state.current_page == "AI Career Coach":
     # Render chatbot responses in clean SaaS container cards
     if "main_chat_response" in st.session_state:
         with st.container(border=True):
-            st.markdown(f"### â“ Question")
+            st.markdown(f"### ❓ Question")
             st.markdown(st.session_state.main_last_question)
             st.divider()
-            st.markdown(f"### ðŸ¤– Response")
+            st.markdown(f"### 🤖 Response")
             st.markdown(st.session_state.main_chat_response)
 
 # ----------------- 5. APPLICATIONS PAGE -----------------
@@ -818,12 +818,12 @@ elif st.session_state.current_page == "Applications":
     st.write("Manage status pipelines (Saved, Applied, Interview, Rejected, Offer) for saved positions.")
 
     if not tracked_apps:
-        st.info("ðŸ’¡ You have not tracked any jobs yet. Save jobs in the 'Jobs' section to start tracking.")
+        st.info("💡 You have not tracked any jobs yet. Save jobs in the 'Jobs' section to start tracking.")
     else:
         # Metric columns summary
         cols = st.columns(5)
         statuses = ["Saved", "Applied", "Interview", "Rejected", "Offer"]
-        emojis = {"Saved": "ðŸ“", "Applied": "ðŸ“¨", "Interview": "ðŸ’¬", "Rejected": "âŒ", "Offer": "ðŸŽ‰"}
+        emojis = {"Saved": "📁", "Applied": "📨", "Interview": "💬", "Rejected": "❌", "Offer": "🎉"}
 
         # Recount pipeline values specifically
         tracker_counts = {"Saved": 0, "Applied": 0, "Interview": 0, "Rejected": 0, "Offer": 0}
@@ -842,7 +842,7 @@ elif st.session_state.current_page == "Applications":
         pdf_tracker_bytes = generate_pdf_report(tracked_apps)
         if pdf_tracker_bytes:
             st.download_button(
-                label="ðŸ“¥ Export Tracked Applications (PDF)",
+                label="📥 Export Tracked Applications (PDF)",
                 data=pdf_tracker_bytes,
                 file_name="tracked_applications.pdf",
                 mime="application/pdf",
@@ -866,9 +866,9 @@ elif st.session_state.current_page == "Applications":
 
                 with col_info:
                     st.markdown(f"### {title} @ {company}")
-                    st.markdown(f"ðŸ“ **Location:** {city} | ðŸ“… **Tracked on:** {date_added}")
+                    st.markdown(f"📍 **Location:** {city} | 📅 **Tracked on:** {date_added}")
                     if link and link != "N/A":
-                        st.markdown(f"ðŸ”— [Apply Link]({link})")
+                        st.markdown(f"🔗 [Apply Link]({link})")
 
                 with col_status_update:
                     status_opts = ["Saved", "Applied", "Interview", "Rejected", "Offer"]
@@ -888,7 +888,7 @@ elif st.session_state.current_page == "Applications":
 
                 with col_actions:
                     st.write("") # vertical spacing
-                    if st.button("Delete ðŸ—‘ï¸", key=f"tracker_delete_{job_id}", use_container_width=True):
+                    if st.button("Delete 🗑️", key=f"tracker_delete_{job_id}", use_container_width=True):
                         if delete_application(job_id):
                             st.toast(f"Removed {title} from pipeline!")
                             st.rerun()
@@ -898,9 +898,9 @@ elif st.session_state.current_page == "Companies":
     st.markdown("<h2>Company Insights Research</h2>", unsafe_allow_html=True)
     st.write("Lookup key company facts from active job posts and generate Gemini-driven corporate profiling.")
 
-    comp_input = st.text_input("ðŸ¢ Company Name to Research:", placeholder="e.g. Google, Amazon, TCS", key="company_input_box")
+    comp_input = st.text_input("🏢 Company Name to Research:", placeholder="e.g. Google, Amazon, TCS", key="company_input_box")
 
-    if st.button("ðŸ¢ Research Company", use_container_width=True, type="primary"):
+    if st.button("🏢 Research Company", use_container_width=True, type="primary"):
         if not comp_input.strip():
             st.warning("Please enter a valid company name.")
         else:
@@ -916,11 +916,11 @@ elif st.session_state.current_page == "Companies":
 
     if "company_research_results" in st.session_state:
         res_data = st.session_state.company_research_results
-        st.subheader(f"ðŸ¢ Research Report: {res_data['company_name']}")
+        st.subheader(f"🏢 Research Report: {res_data['company_name']}")
 
         # Facts (Factual Data)
         with st.container(border=True):
-            st.markdown("### ðŸ“‹ Factual Job Post Data (From Listings API)")
+            st.markdown("### 📋 Factual Job Post Data (From Listings API)")
             facts = res_data["facts"]
             if facts["found"]:
                 st.markdown(f"**Verified API Title:** {facts['employer_name']}")
@@ -940,6 +940,6 @@ elif st.session_state.current_page == "Companies":
         # AI generated overview (AI-Generated content)
         st.write("")
         with st.container(border=True):
-            st.markdown("### ðŸ¤– AI-Generated Insight (Estimated)")
-            st.warning("âš ï¸ The following profile is synthesized by Gemini AI using public domain information. Individual experiences may vary.")
+            st.markdown("### 🤖 AI-Generated Insight (Estimated)")
+            st.warning("⚠️ The following profile is synthesized by Gemini AI using public domain information. Individual experiences may vary.")
             st.markdown(res_data["ai_insights"])
