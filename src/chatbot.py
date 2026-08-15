@@ -14,18 +14,18 @@ def career_chat(user_question):
         from src.rag import retrieve_context
         # Retrieve relevant chunks from vector store
         context = retrieve_context(user_question, n_results=5)
-        
+
         # Get raw resume text from session state if available
         resume_text = st.session_state.get("resume_text") or "Not uploaded"
-        
+
         # Configure API key
         api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
         if not api_key:
             return "API Key not configured. Please set GEMINI_API_KEY in your secrets or environment variables."
-            
+
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel("gemini-3.5-flash")
-        
+
         prompt = f"""
 You are an expert AI Career Assistant and professional career coach.
 Your job is to answer the user's career, job search, resume, or interview question using the retrieved context from their resume and career/interview guides.
@@ -48,7 +48,7 @@ Your job is to answer the user's career, job search, resume, or interview questi
 """
         response = model.generate_content(prompt)
         return response.text
-        
+
     except Exception as e:
         if "ResourceExhausted" in str(e) or "429" in str(e):
             return "⚠️ **AI Rate Limit Exceeded**: The Gemini API rate limit was reached. Please wait a minute and try again."

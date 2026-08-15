@@ -332,12 +332,11 @@ with nav_col_menu:
                 st.rerun()
 
 with nav_col_profile:
-    st.markdown(
-        "<div style='text-align: right; line-height: 50px; font-size: 14px; font-weight: 500; color: #6D4C41;'>"
-        "👤 Profile"
-        "</div>",
-        unsafe_allow_html=True
-    )
+    is_profile_active = st.session_state.current_page == "Profile"
+    profile_btn_kind = "primary" if is_profile_active else "secondary"
+    if st.button("👤 Profile", key="nav_tab_Profile", use_container_width=True, type=profile_btn_kind):
+        st.session_state.current_page = "Profile"
+        st.rerun()
 
 # Status indicators checks
 pdf_files = glob.glob(os.path.join("documents", "*.pdf"))
@@ -599,11 +598,17 @@ elif st.session_state.current_page == "Jobs":
                 key="filter_sort"
             )
 
-        col_f5, col_f6 = st.columns(2)
+        col_f5, col_f6, col_f7 = st.columns(3)
         with col_f5:
             min_salary = st.number_input("💰 Minimum Annual Salary", min_value=0, value=0, step=100000, key="filter_min_salary")
         with col_f6:
             company_filter = st.text_input("🏢 Company Name (Optional)", placeholder="e.g. Google", key="filter_company_name")
+        with col_f7:
+            notice_filter = st.selectbox(
+                "📅 Notice Period Compatibility",
+                ["All", "Compatible with my Profile Notice Period"],
+                key="filter_notice_period"
+            )
 
     st.write("")
 
@@ -667,6 +672,16 @@ elif st.session_state.current_page == "Jobs":
         max_sal = job.get("job_max_salary") or job.get("job_min_salary") or 0
         if min_salary > 0 and max_sal < min_salary:
             continue
+
+        # Notice Period Compatibility check
+        if notice_filter == "Compatible with my Profile Notice Period":
+            from src.database import get_user_profile
+            from src.utils import check_notice_period_compatibility
+            profile = get_user_profile()
+            candidate_np = profile.get("notice_period", "Immediate")
+            job_desc = job.get("job_description", "")
+            if not check_notice_period_compatibility(job_desc, candidate_np):
+                continue
 
         filtered.append(job)
 
@@ -739,21 +754,88 @@ elif st.session_state.current_page == "Resume":
     if not has_resume:
         st.info("💡 Upload your resume above to view parser output and run ATS analysis audits.")
     else:
-        # General resume analysis triggers
-        if st.button("📊 Run General Resume ATS Audit", use_container_width=True, type="primary"):
-            with st.spinner("Analyzing resume content against recruitment standards..."):
-                try:
-                    res_analysis = analyze_resume_general(st.session_state.resume_text)
-                    st.session_state.general_resume_analysis = res_analysis
-                except Exception as e:
-                    st.error(f"Analysis failed: {e}")
+        tab_audit, tab_tailor = st.tabs(["📊 ATS Audit & Text Extraction", "🎯 Tailor Resume for a Job"])
 
-        if "general_resume_analysis" in st.session_state:
-            st.markdown("### 📊 ATS and Skills Assessment Report")
-            st.markdown(st.session_state.general_resume_analysis)
+        with tab_audit:
+            # General resume analysis triggers
+            if st.button("📊 Run General Resume ATS Audit", use_container_width=True, type="primary"):
+                with st.spinner("Analyzing resume content against recruitment standards..."):
+                    try:
+                        res_analysis = analyze_resume_general(st.session_state.resume_text)
+                        st.session_state.general_resume_analysis = res_analysis
+                    except Exception as e:
+                        st.error(f"Analysis failed: {e}")
 
-        with st.expander("📄 View Parsed Resume Plain Text"):
-            st.text_area("Extracted Resume Text:", st.session_state.resume_text, height=350)
+            if "general_resume_analysis" in st.session_state:
+                st.markdown("### 📊 ATS and Skills Assessment Report")
+                st.markdown(st.session_state.general_resume_analysis)
+
+            with st.expander("📄 View Parsed Resume Plain Text"):
+                st.text_area("Extracted Resume Text:", st.session_state.resume_text, height=350)
+
+        with tab_tailor:
+            st.markdown("### 🎯 Tailored Resume Generator")
+            st.write("Customize your resume wording and keyword alignment for a target position.")
+
+            from src.database import get_all_applications
+            from src.ai import generate_tailored_resume
+            from src.export import generate_resume_pdf
+
+            tracked_jobs = get_all_applications()
+            options = ["Paste Custom Job Details..."]
+
+            # Map display string to job dict
+            job_map = {}
+            for app in tracked_jobs:
+                label = f"{app['job_title']} @ {app['employer_name']}"
+                options.append(label)
+                job_map[label] = app
+
+            selected_option = st.selectbox(
+                "Select a target job from your pipeline (or paste custom details):",
+                options,
+                key="tailor_job_select"
+            )
+
+            # Form fields
+            default_title = ""
+            default_company = ""
+            default_desc = ""
+
+            if selected_option != "Paste Custom Job Details...":
+                job_data = job_map[selected_option]
+                default_title = job_data.get("job_title", "")
+                default_company = job_data.get("employer_name", "")
+                default_desc = job_data.get("job_description") or ""
+
+            job_title = st.text_input("Target Job Title:", value=default_title, placeholder="e.g. Full Stack Engineer", key="tailor_title_input")
+            company_name = st.text_input("Company Name:", value=default_company, placeholder="e.g. Tech Corp", key="tailor_company_input")
+            job_desc = st.text_area("Job Description / Requirements:", value=default_desc, height=180, placeholder="Paste requirements here...", key="tailor_desc_input")
+
+            if st.button("✨ Optimize & Tailor My Resume", use_container_width=True, type="primary"):
+                if not job_title or not company_name or not job_desc:
+                    st.error("⚠️ Target title, company name, and job description are all required to tailor.")
+                else:
+                    with st.spinner("Tailoring resume and aligning keywords with Gemini..."):
+                        tailored_text = generate_tailored_resume(st.session_state.resume_text, job_title, company_name, job_desc)
+                        st.session_state.tailored_resume = tailored_text
+
+            if "tailored_resume" in st.session_state and not st.session_state.tailored_resume.startswith("Error"):
+                st.warning("⚠️ **Safety Notice**: AI-generated wording should be reviewed before submission. The assistant is constrained to only use achievements, projects, and credentials present in your original resume.")
+
+                st.markdown("### 📝 Tailored Resume Preview")
+                st.text_area("Optimized Markdown Output:", st.session_state.tailored_resume, height=400)
+
+                # Generate PDF button
+                pdf_bytes = generate_resume_pdf(st.session_state.tailored_resume)
+                if pdf_bytes:
+                    st.download_button(
+                        label="📥 Download Tailored Resume PDF",
+                        data=pdf_bytes,
+                        file_name=f"Tailored_Resume_{company_name.replace(' ', '_')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
 
 # ----------------- 4. AI CAREER COACH PAGE -----------------
 elif st.session_state.current_page == "AI Career Coach":
@@ -943,3 +1025,118 @@ elif st.session_state.current_page == "Companies":
             st.markdown("### 🤖 AI-Generated Insight (Estimated)")
             st.warning("⚠️ The following profile is synthesized by Gemini AI using public domain information. Individual experiences may vary.")
             st.markdown(res_data["ai_insights"])
+
+
+# ----------------- 7. PROFILE PAGE -----------------
+elif st.session_state.current_page == "Profile":
+    st.markdown("<h2>User Profile & Settings</h2>", unsafe_allow_html=True)
+    st.write("Manage your career preferences, contact details, and data privacy settings.")
+
+    from src.database import get_user_profile, save_user_profile
+    import shutil
+
+    profile = get_user_profile()
+
+    with st.form("user_profile_form"):
+        st.subheader("👤 Personal Details & Preferences")
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
+            name = st.text_input("Full Name:", value=profile.get("name", ""))
+            email = st.text_input("Email Address:", value=profile.get("email", ""))
+            phone = st.text_input("Phone Number (Optional):", value=profile.get("phone", ""))
+            pref_role = st.text_input("Preferred Role / Job Title:", value=profile.get("preferred_role", ""), placeholder="e.g. Software Engineer")
+            pref_loc = st.text_input("Preferred Location:", value=profile.get("preferred_location", ""), placeholder="e.g. Bangalore, Remote")
+        with col_p2:
+            remote_pref = st.selectbox(
+                "Remote Preference:",
+                ["All", "Remote Only", "On-site / Hybrid"],
+                index=["All", "Remote Only", "On-site / Hybrid"].index(profile.get("remote_preference", "All")) if profile.get("remote_preference") in ["All", "Remote Only", "On-site / Hybrid"] else 0
+            )
+            exp_level = st.selectbox(
+                "Experience Level:",
+                ["Entry", "Mid", "Senior"],
+                index=["Entry", "Mid", "Senior"].index(profile.get("experience_level", "Entry")) if profile.get("experience_level") in ["Entry", "Mid", "Senior"] else 0
+            )
+            notice_pd = st.selectbox(
+                "Notice Period:",
+                ["Immediate", "15 days", "30 days", "60 days", "90 days"],
+                index=["Immediate", "15 days", "30 days", "60 days", "90 days"].index(profile.get("notice_period", "Immediate")) if profile.get("notice_period") in ["Immediate", "15 days", "30 days", "60 days", "90 days"] else 0
+            )
+            pref_salary = st.text_input("Preferred Salary (LPA / Currency):", value=profile.get("preferred_salary", ""), placeholder="e.g. 12 LPA")
+            skills = st.text_area("Skills (comma-separated):", value=profile.get("skills", ""), placeholder="python, react, sql, aws")
+
+        education = st.text_area("Education & Certifications:", value=profile.get("education", ""), placeholder="e.g. B.Tech in CSE - WCE Sangli")
+
+        submit_btn = st.form_submit_button("💾 Save Profile", use_container_width=True)
+        if submit_btn:
+            new_profile = {
+                "name": name, "email": email, "phone": phone,
+                "preferred_role": pref_role, "preferred_location": pref_loc,
+                "remote_preference": remote_pref, "experience_level": exp_level,
+                "notice_period": notice_pd, "skills": skills,
+                "preferred_salary": pref_salary, "education": education
+            }
+            if save_user_profile(new_profile):
+                st.success("🎉 Profile updated successfully!")
+                st.rerun()
+
+    # Privacy & Data Deletion
+    st.write("")
+    st.markdown("---")
+    st.markdown("### 🔒 Privacy & Data Control")
+    st.warning("⚠️ High-risk settings. Clearing your data will permanently delete your stored profile, job pipelines, and resume files.")
+
+    # Confirmation step
+    if "confirm_delete_all" not in st.session_state:
+        st.session_state.confirm_delete_all = False
+
+    if not st.session_state.confirm_delete_all:
+        if st.button("🗑️ Clear All My Data", type="secondary", use_container_width=True):
+            st.session_state.confirm_delete_all = True
+            st.rerun()
+    else:
+        st.error("❗ Are you absolutely sure? This will delete all SQLite tracked records, your profile settings, and your uploaded resume documents.")
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            if st.button("✔️ Yes, Delete Everything", type="primary", use_container_width=True):
+                # Execute deletion
+                from src.database import get_connection
+                conn = get_connection()
+                if conn:
+                    try:
+                        cursor = conn.cursor()
+                        cursor.execute("DROP TABLE IF EXISTS applications")
+                        cursor.execute("DROP TABLE IF EXISTS user_profile")
+                        conn.commit()
+                        conn.close()
+                    except Exception as e:
+                        st.error(f"Failed database wipe: {e}")
+
+                # Delete uploads folder contents
+                if os.path.exists("uploads"):
+                    for filename in os.listdir("uploads"):
+                        file_path = os.path.join("uploads", filename)
+                        try:
+                            if os.path.isfile(file_path) or os.path.islink(file_path):
+                                os.unlink(file_path)
+                            elif os.path.isdir(file_path):
+                                shutil.rmtree(file_path)
+                        except Exception as e:
+                            st.error(f"Failed deleting file {file_path}: {e}")
+
+                # Re-initialize DB
+                from src.database import init_db, init_profile_db
+                init_db()
+                init_profile_db()
+
+                # Reset session state variables
+                st.session_state.resume_text = None
+                st.session_state.last_uploaded_file = None
+                st.session_state.confirm_delete_all = False
+                st.session_state.current_page = "Home"
+                st.success("💥 All data cleared. Resetting application...")
+                st.rerun()
+        with col_c2:
+            if st.button("❌ Cancel Deletion", type="secondary", use_container_width=True):
+                st.session_state.confirm_delete_all = False
+                st.rerun()
