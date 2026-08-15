@@ -4,16 +4,14 @@ from src.ai import analyze_job
 
 
 def display_job_card(job):
+    from src.utils import format_salary
     title = job.get("job_title", "N/A")
     company = job.get("employer_name", "N/A")
     city = job.get("job_city") or "Not specified"
     employment = job.get("job_employment_type", "N/A")
     apply_link = job.get("job_apply_link")
 
-    salary = "Not disclosed"
-
-    if job.get("job_min_salary") and job.get("job_max_salary"):
-        salary = f"{job['job_min_salary']} - {job['job_max_salary']}"
+    salary = format_salary(job)
 
     unique_key = hashlib.md5(
         f"{title}_{company}_{city}_{apply_link}".encode("utf-8")
@@ -27,7 +25,7 @@ def display_job_card(job):
             st.markdown(f"<h3 style='color: #000000; margin: 0 0 8px 0; font-size: 22px; font-weight: 700; font-family: Outfit, sans-serif;'>{title}</h3>", unsafe_allow_html=True)
             st.markdown(f"<div style='font-size: 14px; color: #000000; font-weight: 600; font-family: Outfit, sans-serif;'>🏢 {company} &nbsp;•&nbsp; 📍 {city}</div>", unsafe_allow_html=True)
             st.markdown(f"<div style='font-size: 13px; color: #000000; margin-top: 4px; font-weight: 500; font-family: Outfit, sans-serif;'>💼 {employment} &nbsp;•&nbsp; 💰 {salary}</div>", unsafe_allow_html=True)
-            
+
             # Show remote friendly badge if applicable
             is_remote = job.get("job_is_remote")
             if is_remote or "remote" in city.lower():
@@ -39,18 +37,18 @@ def display_job_card(job):
         with col2:
             if apply_link:
                 st.link_button("Apply ↗", apply_link, use_container_width=True)
-            
+
             # Save/Track Job Button
             from src.database import save_job, get_all_applications
             job_id = job.get("job_id") or unique_key
             saved_jobs = {app["job_id"] for app in get_all_applications()}
             is_saved = job_id in saved_jobs
-            
+
             if is_saved:
                 st.button("Saved ✓", key=f"save_{unique_key}", disabled=True, use_container_width=True)
             else:
                 if st.button("Save Job 📁", key=f"save_{unique_key}", use_container_width=True):
-                    if save_job(job_id, title, company, city, apply_link, status="Saved"):
+                    if save_job(job_id, title, company, city, apply_link, status="Saved", description=job.get("job_description")):
                         st.toast("Job saved to Tracker!")
                         st.rerun()
 
@@ -70,7 +68,7 @@ def display_job_card(job):
                     from src.ai import analyze_resume_match
                     with st.spinner("Matching resume with Gemini..."):
                         fit_analysis = analyze_resume_match(st.session_state.resume_text, job)
-                    display_resume_analysis(fit_analysis)
+                    display_resume_analysis(fit_analysis, st.session_state.resume_text, job.get("job_description", ""))
 
         description = job.get("job_description")
 
@@ -79,9 +77,10 @@ def display_job_card(job):
                 st.write(description)
 
 
-def display_resume_analysis(analysis_text):
+def display_resume_analysis(analysis_text, resume_text, job_desc):
     """Parses and renders the Gemini resume-to-job analysis output with a premium Streamlit UI."""
     import re
+    from src.utils import calculate_hybrid_score
 
     sections = {
         "score": "",
@@ -119,51 +118,75 @@ def display_resume_analysis(analysis_text):
 
     st.write("")
     st.markdown("<hr style='border-top: 1px solid #D0B8A8;'>", unsafe_allow_html=True)
-    st.markdown("<h3 style='color: #000000; font-family: Outfit, sans-serif; font-weight: 700; font-size: 24px; margin-bottom: 16px;'>📊 Resume Match Analysis</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #000000; font-family: Outfit, sans-serif; font-weight: 700; font-size: 24px; margin-bottom: 16px;'>📊 Hybrid Resume Match Analysis</h3>", unsafe_allow_html=True)
 
-    # Render Match Score Section
+    # Extract Gemini Score
+    gemini_score_val = 60
     if sections["score"]:
         score_match = re.search(r"(\d+)\s*/\s*100", sections["score"], re.IGNORECASE)
         if not score_match:
             score_match = re.search(r"Score:\s*(\d+)", sections["score"], re.IGNORECASE)
+        if score_match:
+            try:
+                gemini_score_val = int(score_match.group(1))
+            except Exception:
+                gemini_score_val = 60
 
-        score_value = int(score_match.group(1)) if score_match else 50
+    # Calculate Hybrid Metrics
+    metrics = calculate_hybrid_score(resume_text, job_desc, gemini_score_val)
+    score_value = metrics["final_score"]
 
-        col_metric, col_prog = st.columns([1, 2])
-        with col_metric:
-            st.markdown(f"""
-            <div style='background-color: #F8EDE3; border: 1px solid #D0B8A8; border-radius: 8px; padding: 12px; text-align: center; font-family: Outfit, sans-serif;'>
-                <div style='font-size: 11px; font-weight: 700; color: #000000; text-transform: uppercase;'>Match Score</div>
-                <div style='font-size: 28px; font-weight: 800; color: #000000; margin-top: 2px;'>{score_value}/100</div>
-            </div>
-            """, unsafe_allow_html=True)
-        with col_prog:
-            st.write("")  # Spacer
-            st.markdown(f"""
-            <div style='margin-bottom: 6px; font-size: 13px; font-weight: 700; color: #000000; font-family: Outfit, sans-serif;'>
-                <span>Resume Matching Progress</span>
-            </div>
-            <div style='background-color: #DFD3C3; height: 8px; border-radius: 4px; overflow: hidden;'>
-                <div style='background-color: #8D493A; width: {score_value}%; height: 100%;'></div>
-            </div>
-            """, unsafe_allow_html=True)
+    col_metric, col_prog = st.columns([1, 2])
+    with col_metric:
+        st.markdown(f"""
+        <div style='background-color: #F8EDE3; border: 1px solid #D0B8A8; border-radius: 8px; padding: 12px; text-align: center; font-family: Outfit, sans-serif;'>
+            <div style='font-size: 11px; font-weight: 700; color: #000000; text-transform: uppercase;'>Hybrid Match Score</div>
+            <div style='font-size: 28px; font-weight: 800; color: #000000; margin-top: 2px;'>{score_value}/100</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_prog:
+        st.write("")  # Spacer
+        st.markdown(f"""
+        <div style='margin-bottom: 6px; font-size: 13px; font-weight: 700; color: #000000; font-family: Outfit, sans-serif;'>
+            <span>Overall Compatibility</span>
+        </div>
+        <div style='background-color: #DFD3C3; height: 8px; border-radius: 4px; overflow: hidden;'>
+            <div style='background-color: #8D493A; width: {score_value}%; height: 100%;'></div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # Display score explanation
-        explanation = re.sub(r"Score:\s*\d+/\d+", "", sections["score"], flags=re.IGNORECASE).strip()
-        st.markdown(explanation)
+    # Render Hybrid Score Breakdown
+    st.write("")
+    st.markdown("##### 🔍 Match Score Breakdown")
+    col_b1, col_b2, col_b3 = st.columns(3)
+    with col_b1:
+        st.metric("Skill Match (40% Weight)", f"{metrics['skill_overlap_pct']}%")
+    with col_b2:
+        st.metric("Semantic Sim. (30% Weight)", f"{metrics['semantic_similarity_pct']}%")
+    with col_b3:
+        st.metric("Gemini Evaluator (30% Weight)", f"{metrics['gemini_score_pct']}%")
+
+    # Display score explanation
+    explanation = re.sub(r"Score:\s*\d+/\d+", "", sections["score"], flags=re.IGNORECASE).strip()
+    st.markdown(f"**AI Contextual Feedback:** {explanation}")
 
     st.write("")
 
-    # Render Skills & Missing Skills side-by-side in columns
     col_skills_1, col_skills_2 = st.columns(2)
     with col_skills_1:
         with st.container(border=True):
-            st.markdown("<h4 style='color: #000000; font-family: Outfit, sans-serif; font-weight: 700; margin-top: 0;'>✦ Matching Skills</h4>", unsafe_allow_html=True)
-            st.markdown(sections["matching_skills"] if sections["matching_skills"] else "No matching skills identified.")
+            st.markdown("<h4 style='color: #000000; font-family: Outfit, sans-serif; font-weight: 700; margin-top: 0;'>✦ Matching Skills (Deterministic)</h4>", unsafe_allow_html=True)
+            if metrics["matching_skills"]:
+                st.markdown("\n".join(f"- **{s.title()}**" for s in metrics["matching_skills"]))
+            else:
+                st.write("No matching tech stack skills found.")
     with col_skills_2:
         with st.container(border=True):
-            st.markdown("<h4 style='color: #000000; font-family: Outfit, sans-serif; font-weight: 700; margin-top: 0;'>✦ Missing Skills</h4>", unsafe_allow_html=True)
-            st.markdown(sections["missing_skills"] if sections["missing_skills"] else "No missing skills identified.")
+            st.markdown("<h4 style='color: #000000; font-family: Outfit, sans-serif; font-weight: 700; margin-top: 0;'>✦ Missing Skills (Deterministic)</h4>", unsafe_allow_html=True)
+            if metrics["missing_skills"]:
+                st.markdown("\n".join(f"- **{s.title()}**" for s in metrics["missing_skills"]))
+            else:
+                st.write("No missing tech stack skills identified.")
 
     st.write("")
 

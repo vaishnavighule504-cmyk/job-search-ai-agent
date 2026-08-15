@@ -21,12 +21,12 @@ def chunk_text(text, chunk_size=1000, chunk_overlap=200):
     """Splits text into chunks of roughly chunk_size characters, respecting word boundaries."""
     if not text:
         return []
-    
+
     words = text.split()
     chunks = []
     current_chunk = []
     current_length = 0
-    
+
     for word in words:
         current_chunk.append(word)
         current_length += len(word) + 1
@@ -36,7 +36,7 @@ def chunk_text(text, chunk_size=1000, chunk_overlap=200):
             overlap_count = max(1, len(current_chunk) // 5)
             current_chunk = current_chunk[-overlap_count:]
             current_length = sum(len(w) + 1 for w in current_chunk)
-            
+
     if current_chunk:
         chunks.append(" ".join(current_chunk))
     return chunks
@@ -49,13 +49,13 @@ def get_embeddings(texts, is_query=False):
     if not api_key:
         raise ValueError("GEMINI_API_KEY is not configured.")
     genai.configure(api_key=api_key)
-    
+
     task_type = "retrieval_query" if is_query else "retrieval_document"
-    
+
     is_single = isinstance(texts, str)
     if is_single:
         texts = [texts]
-        
+
     try:
         response = genai.embed_content(
             model="models/gemini-embedding-001",
@@ -96,10 +96,10 @@ def simple_text_search(query, documents, n_results=5):
         doc_words = set(doc["text"].lower().split())
         match_count = len(query_words.intersection(doc_words))
         scored_docs.append((match_count, doc))
-        
+
     scored_docs.sort(key=lambda x: x[0], reverse=True)
     top_docs = scored_docs[:n_results]
-    
+
     return {
         "documents": [[doc["text"] for _, doc in top_docs]],
         "metadatas": [[doc["metadata"] for _, doc in top_docs]],
@@ -109,7 +109,7 @@ def simple_text_search(query, documents, n_results=5):
 class InMemoryStore:
     def __init__(self):
         self.documents = []
-        
+
     def add_documents(self, texts, embeddings, metadatas=None):
         if metadatas is None:
             metadatas = [{} for _ in texts]
@@ -121,7 +121,7 @@ class InMemoryStore:
                 "embedding": emb,
                 "metadata": meta
             })
-            
+
     def query(self, query_embedding, n_results=5):
         scored_docs = []
         for doc in self.documents:
@@ -131,10 +131,10 @@ class InMemoryStore:
             else:
                 score = cosine_similarity(query_embedding, doc["embedding"])
             scored_docs.append((score, doc))
-            
+
         scored_docs.sort(key=lambda x: x[0], reverse=True)
         top_docs = scored_docs[:n_results]
-        
+
         return {
             "documents": [[doc["text"] for _, doc in top_docs]],
             "metadatas": [[doc["metadata"] for _, doc in top_docs]],
@@ -149,7 +149,7 @@ class RAGVectorStore:
         self.chroma_client = None
         self.collection = None
         self.in_memory_store = InMemoryStore()
-        
+
         try:
             import chromadb
             # Initialize persistent client in workspace
@@ -158,13 +158,13 @@ class RAGVectorStore:
             self.use_chroma = True
         except Exception as e:
             self.use_chroma = False
-            
+
     def add_documents(self, texts, embeddings, metadatas=None):
         if not texts:
             return
         if metadatas is None:
             metadatas = [{} for _ in texts]
-            
+
         if self.use_chroma and embeddings is not None:
             try:
                 import uuid
@@ -179,9 +179,9 @@ class RAGVectorStore:
             except Exception as e:
                 # If chroma add fails, fallback to in-memory store
                 pass
-                
+
         self.in_memory_store.add_documents(texts, embeddings, metadatas)
-        
+
     def query(self, query_text, query_embedding, n_results=5):
         if self.use_chroma and query_embedding is not None:
             try:
@@ -193,7 +193,7 @@ class RAGVectorStore:
                     return results
             except Exception as e:
                 pass
-                
+
         # Fallback to InMemoryStore
         if query_embedding is not None:
             return self.in_memory_store.query(query_embedding, n_results)
@@ -211,7 +211,7 @@ class RAGVectorStore:
             if not all_docs:
                 all_docs = self.in_memory_store.documents
             return simple_text_search(query_text, all_docs, n_results)
-            
+
     def delete_resume_chunks(self):
         if self.use_chroma:
             try:
@@ -231,13 +231,13 @@ def initialize_rag():
         st.session_state.vector_store = RAGVectorStore()
     if "processed_documents" not in st.session_state:
         st.session_state.processed_documents = set()
-        
+
     os.makedirs("documents", exist_ok=True)
     os.makedirs("uploads", exist_ok=True)
-    
+
     # List PDF files in documents/
     pdf_files = glob.glob(os.path.join("documents", "*.pdf"))
-    
+
     # Process each PDF if not already loaded
     new_files = [f for f in pdf_files if f not in st.session_state.processed_documents]
     for file_path in new_files:
@@ -253,20 +253,20 @@ def initialize_rag():
                         source_type = "interview_guide"
                     elif "resume" in filename:
                         source_type = "resume"
-                        
+
                     metadatas = [{
                         "source_file": os.path.basename(file_path),
                         "source_type": source_type,
                         "chunk_index": i
                     } for i in range(len(chunks))]
-                    
+
                     embeddings = None
                     try:
                         embeddings = get_embeddings(chunks)
                     except Exception as e:
                         # Friendly message instead of crashing
                         st.warning(f"⚠️ Embeddings failed for {os.path.basename(file_path)}. Using text search.")
-                        
+
                     st.session_state.vector_store.add_documents(chunks, embeddings, metadatas)
                     st.session_state.processed_documents.add(file_path)
         except Exception as e:
@@ -277,48 +277,48 @@ def process_uploaded_resume(uploaded_file):
     """Saves resume to uploads/, extracts text, chunks it, embeds, and adds to store."""
     if uploaded_file is None:
         return None
-        
+
     try:
         os.makedirs("uploads", exist_ok=True)
         file_path = os.path.join("uploads", uploaded_file.name)
-        
+
         # Save file
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
-            
+
         # Extract text
         with open(file_path, "rb") as f:
             text = extract_text_from_pdf(f)
-            
+
         if not text or text.startswith("Error"):
             return text if text else "Error extracting text from resume PDF"
-            
+
         chunks = chunk_text(text)
         if not chunks:
             return "No text chunks found in resume"
-            
+
         # Embeddings
         embeddings = None
         try:
             embeddings = get_embeddings(chunks)
         except Exception as e:
             st.warning(f"⚠️ Embeddings failed for resume. Using text search.")
-            
+
         if "vector_store" not in st.session_state:
             st.session_state.vector_store = RAGVectorStore()
-            
+
         # Delete old resume chunks
         st.session_state.vector_store.delete_resume_chunks()
-        
+
         # Add new chunks
         metadatas = [{
             "source_file": uploaded_file.name,
             "source_type": "resume",
             "chunk_index": i
         } for i in range(len(chunks))]
-        
+
         st.session_state.vector_store.add_documents(chunks, embeddings, metadatas)
-        
+
         # Save raw text to session state
         st.session_state.resume_text = text
         return text
@@ -329,29 +329,29 @@ def retrieve_context(user_question, n_results=5):
     """Retrieves relevant chunks from the vector store."""
     if "vector_store" not in st.session_state:
         return ""
-        
+
     query_embedding = None
     try:
         query_embedding = get_embeddings(user_question, is_query=True)
     except Exception:
         pass
-        
+
     results = st.session_state.vector_store.query(user_question, query_embedding, n_results=n_results)
-    
+
     if not results or not results.get("documents") or not results["documents"][0]:
         return ""
-        
+
     formatted_context = []
     documents = results["documents"][0]
-    
+
     # Safely get metadatas list
     raw_metadatas = results.get("metadatas")
     metadatas = raw_metadatas[0] if (raw_metadatas and len(raw_metadatas) > 0 and raw_metadatas[0] is not None) else [None] * len(documents)
-    
+
     for doc, meta in zip(documents, metadatas):
         meta = meta if meta is not None else {}
         src_file = meta.get("source_file", "unknown")
         src_type = meta.get("source_type", "unknown")
         formatted_context.append(f"[{src_type.upper()} from {src_file}]:\n{doc}")
-        
+
     return "\n\n---\n\n".join(formatted_context)

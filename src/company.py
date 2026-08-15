@@ -18,32 +18,32 @@ def get_company_facts_from_jobs(company_name, jobs_list):
         "employer_website": None,
         "job_types": set(),
     }
-    
+
     for job in jobs_list:
         employer = job.get("employer_name") or ""
         if company_name.lower() in employer.lower():
             factual_info["found"] = True
             factual_info["employer_name"] = employer # use official name from API
-            
+
             city = job.get("job_city")
             state = job.get("job_state")
             country = job.get("job_country")
             loc_parts = [p for p in [city, state, country] if p]
             if loc_parts:
                 factual_info["locations"].add(", ".join(loc_parts))
-                
+
             title = job.get("job_title")
             if title:
                 factual_info["job_titles"].add(title)
-                
+
             web = job.get("employer_website")
             if web:
                 factual_info["employer_website"] = web
-                
+
             emp_type = job.get("job_employment_type")
             if emp_type:
                 factual_info["job_types"].add(emp_type)
-                
+
     factual_info["locations"] = list(factual_info["locations"])
     factual_info["job_titles"] = list(factual_info["job_titles"])
     factual_info["job_types"] = list(factual_info["job_types"])
@@ -56,11 +56,11 @@ def generate_company_insights(company_name):
     api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
     if not api_key:
         return "⚠️ Gemini API key not configured. Cannot fetch AI insights."
-        
+
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel("gemini-3.5-flash")
-        
+
         prompt = f"""
 You are a corporate research analyst and professional career advisor.
 Provide a detailed company research overview for: "{company_name}".

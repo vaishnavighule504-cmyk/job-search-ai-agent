@@ -101,7 +101,7 @@ Analyze the matching compatibility between the candidate's resume and the job de
 - **Title:** {job.get("job_title", "N/A")}
 - **Company:** {job.get("employer_name", "N/A")}
 - **Location:** {job.get("job_city", "N/A")}
-- **Description:** 
+- **Description:**
 {job.get("job_description", "N/A")}
 
 ### Candidate's Resume
@@ -218,4 +218,45 @@ Provide specific, drop-in phrasing or content suggestions to improve the resume'
         if "ResourceExhausted" in str(e) or "429" in str(e):
             return "⚠️ **AI Rate Limit Exceeded**: Gemini rate limit was reached. Please wait a minute and try again."
         return f"⚠️ **AI Resume Analysis Error**: Could not complete analysis: {e}"
-
+
+
+def generate_tailored_resume(resume_text, job_title, employer_name, job_description):
+    """
+    Generates a tailored resume matching the target job description.
+    Adheres strictly to the AI Safety Rules (no fabrication of experience, companies, projects, or credentials).
+    """
+    api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
+    if not api_key:
+        return "⚠️ **AI Configuration Error**: The Gemini API key is not configured. Please set GEMINI_API_KEY in your secrets or environment variables."
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-3.5-flash")
+    try:
+        prompt = f"""
+You are an expert ATS optimization assistant. Your task is to customize a candidate's resume for a specific target job.
+
+TARGET JOB DETAILS:
+- Title: {job_title}
+- Company: {employer_name}
+- Job Description:
+{job_description}
+
+CANDIDATE'S ORIGINAL RESUME:
+{resume_text}
+
+CRITICAL SAFETY RULES:
+1. DO NOT INVENT or FABRICATE any information.
+2. DO NOT add new companies, internships, schools, degrees, projects, achievements, certificates, or dates.
+3. DO NOT fabricate metrics or responsibilities. Only use numerical values and achievements present in the original resume.
+4. You may REORDER items, REWRITE descriptions and bullet points to improve word choice, emphasize relevant skills matching the job description, and optimize for ATS keyword alignment.
+5. All polished bullet points must retain the factual meaning of the candidate's actual experiences.
+
+Output the tailored resume in a professional, clean Markdown format ready for export.
+Include sections such as Contact Details (if present), Professional Summary, Technical Skills (prioritizing skills matching the job), Professional Experience, Projects, and Education.
+Do not add any meta-commentary, notes, or chat responses. Start directly with the markdown resume content.
+"""
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        if "ResourceExhausted" in str(e) or "429" in str(e):
+            return "⚠️ **AI Rate Limit Exceeded**: The Gemini API rate limit was reached. Please wait a minute and try again."
+        return f"⚠️ **AI Generation Error**: Could not tailor the resume due to an error: {e}"

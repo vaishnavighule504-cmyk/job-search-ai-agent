@@ -33,40 +33,39 @@ def generate_pdf_report(jobs):
         pdf.set_auto_page_break(auto=True, margin=15)
         pdf.add_page()
         pdf.set_font("helvetica", "", 10)
-        
+
         if not jobs:
             pdf.cell(0, 10, "No jobs to report.", new_x="LMARGIN", new_y="NEXT")
             # output() in fpdf2 returns bytearray
             return bytes(pdf.output())
-            
+
         for idx, job in enumerate(jobs):
             title = job.get("job_title", "N/A")
             company = job.get("employer_name", "N/A")
             location = job.get("job_city") or job.get("job_state") or "N/A"
-            
-            salary = "Not disclosed"
-            if job.get("job_min_salary") and job.get("job_max_salary"):
-                salary = f"{job['job_min_salary']} - {job['job_max_salary']}"
-                
+
+            from src.utils import format_salary
+            salary = format_salary(job)
+
             emp_type = job.get("job_employment_type", "N/A")
             # Handle list if employment types is a list
             if isinstance(emp_type, list):
                 emp_type = ", ".join(emp_type)
-                
+
             apply_link = job.get("job_apply_link") or "N/A"
             status = job.get("status") # If from application tracker
-            
+
             # Job Header
             pdf.set_font("helvetica", "B", 12)
             pdf.cell(0, 8, f"{idx+1}. {title} @ {company}", new_x="LMARGIN", new_y="NEXT")
-            
+
             # Job Details
             pdf.set_font("helvetica", "", 10)
             details_str = f"Location: {location} | Employment Type: {emp_type} | Salary: {salary}"
             if status:
                 details_str += f" | Tracker Status: {status}"
             pdf.cell(0, 6, details_str, new_x="LMARGIN", new_y="NEXT")
-            
+
             # Apply Link
             if apply_link and apply_link != "N/A":
                 pdf.write(6, "Apply Link: ")
@@ -78,13 +77,77 @@ def generate_pdf_report(jobs):
                 pdf.ln(8)
             else:
                 pdf.ln(4)
-                
+
             # Divider line
             curr_y = pdf.get_y()
             pdf.line(10, curr_y, 200, curr_y)
             pdf.ln(5)
-            
+
         return bytes(pdf.output())
     except Exception as e:
         st.error(f"⚠️ PDF Generation Failed: {e}")
+        return None
+
+
+class ResumePDF(FPDF):
+    def header(self):
+        pass
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font("helvetica", "I", 8)
+        self.cell(0, 10, f"Page {self.page_no()}", align="C")
+
+
+def generate_resume_pdf(markdown_content):
+    """
+    Generates a clean PDF document from a markdown resume.
+    Returns the raw PDF bytes.
+    """
+    try:
+        pdf = ResumePDF()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+        pdf.set_font("helvetica", "", 10)
+
+        lines = markdown_content.split("\n")
+        for line in lines:
+            line = line.strip()
+            if not line:
+                pdf.ln(2)
+                continue
+
+            if line.startswith("# "):
+                text = line[2:].strip()
+                pdf.ln(4)
+                pdf.set_font("helvetica", "B", 16)
+                pdf.cell(0, 8, text, new_x="LMARGIN", new_y="NEXT")
+                pdf.ln(2)
+            elif line.startswith("## "):
+                text = line[3:].strip()
+                pdf.ln(3)
+                pdf.set_font("helvetica", "B", 12)
+                pdf.cell(0, 6, text, new_x="LMARGIN", new_y="NEXT")
+                curr_y = pdf.get_y()
+                pdf.line(10, curr_y, 200, curr_y)
+                pdf.ln(2)
+            elif line.startswith("### "):
+                text = line[4:].strip()
+                pdf.ln(2)
+                pdf.set_font("helvetica", "B", 10)
+                pdf.cell(0, 5, text, new_x="LMARGIN", new_y="NEXT")
+            elif line.startswith("- ") or line.startswith("* "):
+                text = line[2:].strip()
+                pdf.set_font("helvetica", "", 10)
+                # Draw bullet point
+                pdf.cell(5, 5, "-", align="L")
+                pdf.multi_cell(0, 5, text.replace("**", ""), new_x="LMARGIN", new_y="NEXT")
+            else:
+                clean_text = line.replace("**", "")
+                pdf.set_font("helvetica", "", 10)
+                pdf.multi_cell(0, 5, clean_text, new_x="LMARGIN", new_y="NEXT")
+
+        return bytes(pdf.output())
+    except Exception as e:
+        st.error(f"⚠️ Resume PDF Generation Failed: {e}")
         return None
