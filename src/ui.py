@@ -22,7 +22,7 @@ def display_job_card(job):
         col1, col2 = st.columns([3, 1])
 
         with col1:
-            st.markdown(f"<h3 style='color: #000000; margin: 0 0 8px 0; font-size: 22px; font-weight: 700; font-family: Outfit, sans-serif;'>{title}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #ffffff; margin: 0 0 8px 0; font-size: 22px; font-weight: 700; font-family: Outfit, sans-serif;'>{title}</h3>", unsafe_allow_html=True)
             st.markdown(f"<div style='font-size: 14px; color: #000000; font-weight: 600; font-family: Outfit, sans-serif;'>🏢 {company} &nbsp;•&nbsp; 📍 {city}</div>", unsafe_allow_html=True)
             st.markdown(f"<div style='font-size: 13px; color: #000000; margin-top: 4px; font-weight: 500; font-family: Outfit, sans-serif;'>💼 {employment} &nbsp;•&nbsp; 💰 {salary}</div>", unsafe_allow_html=True)
 

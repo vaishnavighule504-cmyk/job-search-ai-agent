@@ -163,7 +163,7 @@ st.markdown("""
 
     /* Vertical block border wrapper styled as clean white SaaS cards */
     div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #FFFFFF !important;
+        background-color: #ffffff !important;
         border: 1px solid #D0B8A8 !important;
         border-radius: 8px !important;
         box-shadow: 0 1px 3px 0 rgba(141, 73, 58, 0.03) !important;
@@ -212,52 +212,71 @@ st.markdown("""
     }
 
     /* Selectbox specific overrides targeting BaseWeb select components */
-    div[data-baseweb="select"] {
-        background-color: #FFFFFF !important;
-        border-radius: 6px !important;
-        border: 1px solid #D0B8A8 !important;
-    }
-    div[data-baseweb="select"] > div {
+    div[data-baseweb="select"],
+    div[data-baseweb="select"] *,
+    div[data-testid="stSelectbox"],
+    div[data-testid="stSelectbox"] *,
+    div[data-baseweb="icon"],
+    div[data-baseweb="icon"] * {
         background-color: #FFFFFF !important;
         color: #000000 !important;
-        border: none !important;
+        fill: #8D493A !important;
     }
-    div[data-baseweb="select"] div,
-    div[data-baseweb="select"] span {
-        color: #000000 !important;
-    }
-
-    div[data-testid="stNumberInput"] > div {
-        background-color: #FFFFFF !important;
+    div[data-baseweb="select"],
+    div[data-testid="stSelectbox"] > div {
         border-radius: 6px !important;
         border: 1px solid #D0B8A8 !important;
     }
 
-    div[data-testid="stNumberInput"] button {
+    div[data-testid="stNumberInput"] > div,
+    div[data-testid="stNumberInput"] div {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border-radius: 6px !important;
+        border: 1px solid #D0B8A8 !important;
+    }
+
+    div[data-testid="stNumberInput"] button,
+    div[data-testid="stNumberInput"] button * {
         background-color: #F8EDE3 !important;
         color: #000000 !important;
+        fill: #8D493A !important;
         border: none !important;
     }
-    div[data-testid="stNumberInput"] button:hover {
+    div[data-testid="stNumberInput"] button:hover,
+    div[data-testid="stNumberInput"] button:hover * {
         background-color: #DFD3C3 !important;
+        color: #8D493A !important;
     }
 
-    /* Dropdown popover list styling */
-    div[data-baseweb="popover"] {
+    /* Dropdown popover list & option items styling (All white/beige, no black backgrounds) */
+    div[data-baseweb="popover"],
+    div[data-baseweb="popover"] *,
+    div[data-baseweb="menu"],
+    div[data-baseweb="menu"] * {
         background-color: #FFFFFF !important;
+        color: #000000 !important;
     }
-    div[data-baseweb="popover"] ul,
     div[data-baseweb="popover"] li,
-    div[data-baseweb="popover"] div,
-    div[data-baseweb="popover"] span {
+    div[data-baseweb="menu"] li,
+    div[role="option"] {
         background-color: #FFFFFF !important;
         color: #000000 !important;
     }
     div[data-baseweb="popover"] li:hover,
-    div[data-baseweb="popover"] li:hover div,
-    div[data-baseweb="popover"] li:hover span {
+    div[data-baseweb="popover"] li:hover *,
+    div[data-baseweb="menu"] li:hover,
+    div[data-baseweb="menu"] li:hover *,
+    div[role="option"]:hover,
+    div[role="option"]:hover * {
         background-color: #F8EDE3 !important;
         color: #8D493A !important;
+    }
+    div[aria-selected="true"],
+    div[aria-selected="true"] * {
+        background-color: #DFD3C3 !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
     }
 
     /* File Uploader overrides */
